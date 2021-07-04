@@ -1,202 +1,139 @@
-# QRコード認識Reactコンポーネント
+# QRコード認識Reactコンポーネント with Web Worker
 
 
-
-![qr-reader.png](./img/qr-reader.png)
-
-* [サンプルページ(github pages)](https://murasuke.github.io/qr-reader-react/)
+* [github-qr-reader-react-webworker](https://github.com/murasuke/qr-reader-react-webworker/)
 
 ## はじめに
 
-ブラウザでQRコードの認識できるのか？と調べたところ、[jsqr](https://www.npmjs.com/package/jsqr)というライブラリで簡単に出来ることがわかりました。
-そのReact版です。
+以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)に、上下に移動する「緑色のバー」を追加しました(CSS animation)。
 
-* 自作の[js-QR-reader](https://github.com/murasuke/js-QR-reader)をReactに移植
+ところが、バーの動きが**かくかく**してしまい、きれいなアニメーションになりません。
 
-## 技術的な特徴
+UIスレッドでQRコード認識(少し時間がかかる)を行うことが原因で、描画処理がブロックされているようです。
 
-* カメラ動画を&lt;video&gt;タグでブラウザに表示。タイマーで定期的に画像化してQR認識ライブラリ[jsqr](https://www.npmjs.com/package/jsqr)に引き渡します。
+解決のため、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)の導入を検討し、試行錯誤の上で動くようになったので、情報としてまとめました。
+
+---
+
+* 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。eject不要、TypeScriptでWeb Workerの処理を書いて、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
+
+---
+
+※ ↓ 画像なのでわかりづらいですが「緑色のバー」が上下します。
+
+![qr-reader.png](./img/scanbar.png)
 
 
 
-* DOM(videoタグ)を直接操作する必要があるため`useRef()`フックを利用
+* QRコード認識については[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)をご確認ください。
 
-* `setInterval()`で定期的に[QRコード認識ライブラリ](https://www.npmjs.com/package/jsqr)を呼び出します
 
-* 認識時にcallBack関数で通知し、停止するかそのまま継続するか選ぶことができます。
+## create-react-appで作ったアプリケーションとWeb Workerを組み合わせた場合に発生する技術的な課題について
 
-## 主な機能
+[Create React AppでWeb Workerを使うには](https://blog.makotoishida.com/2018/11/create-react-appweb-worker.html) にまとめられていますが、Web Workerを使うのはかなりしんどいようです。
 
-* props：&lt;video&gt;タグのサイズ、停止/再開(`pause`)、認識時枠表示(`showQRFrame`)を指定します
+### 1. publicフォルダにWorkerのJSファイルを配置して読み込む
+
+Web Workerは`.js`ファイルを読み込むため、publicフォルダに`worker.js`ファイルを別途作成して配置しておくか、`worker.ts`を別途tscでビルドしてpublicフォルダに配置するようにする必要がある。
+
+```javascript
+const worker = new Worker('worker.js');
+worker.postMessage(`hoge`);
+```
+
+> 処理内容をTypeScriptで書きたい、別にビルドするのが面倒なので却下
+
+### 2. ejectしてからWebPackの設定に worker-loader または worker-plugin を追加する
+
+> ejectしたくない、WebPackを直接使いたくない却下
+
+### 3. ejectせずに react-app-rewired を使ってWebPackの設定に worker-loader または worker-plugin を追加する。
+
+> WebPackを直接使いたくないので却下・・・
+### 4. WorkerのJSファイルをBlobとして読み込んでからWorkerスレッドを生成する。
+
+> わからんでもないが、トリッキー過ぎるので却下・・・
+
+こちらのページで上記1.～4.の議論が行われていますが、結論が良く割りませんでした。
+[Is it possible to use load webworkers? #1277](https://github.com/facebook/create-react-app/issues/1277)
+
+
+## 解決策：`create-react-app`と`Web Worker`で検索したところ、[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)という解決策がみつかりました
+
+**Web Workerを意識せず、メソッドの呼び出しとして処理できてしまいます！**
+
+
+### 使い方
+
+* ./src/worker フォルダに下記3ファイルを作成します
+
+| ファイル名 | 説明 | 
+|-----------|------------|
+|custom.d.ts|型定義。worker.tsの型に合わせる(戻り値はPromis<>でラップする)|
+|index.ts|workerのインラインローダー。説明を読んでもよくわかりません・・・・|
+|worker.ts|Web Workerに実行させる処理(function)定義|
 
 ```typescript
-export type QRReaderProps = {
-  width?: number,
-  height?: number,
-  pause?: boolean,
-  showQRFrame?: boolean,
-  timerInterval?: number,
-  onRecognizeCode?: (e: QRCode) => boolean,
+/* ./worker/custom.d.ts */
+declare module 'comlink-loader!*' {
+  class WebpackWorker extends Worker {
+    constructor();
+
+    // Add any custom functions to this class.
+    // Make note that the return type needs to be wrapped in a promise.
+    processData(data: ImageData): Promise<QRCode>;
+  }
+
+  export = WebpackWorker;
 }
-
-```
-
-* 認識したタイミングで、利用側にcallback(`onRecognizeCode()`)を行います。
-
-```typescript
-  const onRecognizeCode = (e: QRCode) => {
-    setCode(e.data);
-    if (stopOnRecognize) {
-      setQRParam( e => { return {...e, pause: true}; });
-    }
-  }
-```
-
-## QR認識コンポーネント概要
-
-一部を抜粋し、説明用に書き換えてあります。
-
-1. &lt;video&gt;タグを配置し、ReactからDOMを直接操作するためuseRef()で参照します。
-
-```typescript
-  const video = useRef(null as HTMLVideoElement);
 ```
 
 ```typescript
-  <video ref={video}></video>
-```
-  実際のソースでは、styled-componentを利用しているため、&lt;VideoArea&gt;になっています。
+/* ./worker/index.ts */
+// eslint-disable-next-line
+import Worker from 'comlink-loader!./worker'; // inline loader
 
-1. カメラの入力ストリームを取得し、videoタグに接続します。
-
-```typescript
-  const constraints = { 
-    audio: false, 
-    video: {
-      facingMode: 'environment', 
-      width, 
-      height, 
-  }};
-
-  // useRef()を利用する場合、video.currentで参照します
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  video.current.srcObject = stream;
-  video.current.play();
+export default Worker;
 ```
 
-2. video動画を画像に変換するために必要なcanvas1を用意します。サイズはvideo側と合わせます。
-
 ```typescript
-  const canvas = new OffscreenCanvas(width, height);
-  const context = canvas.getContext('2d');
-```
+/* ./worker/worker.ts */
+import jsqr, { QRCode } from 'jsqr';
 
-3. タイマー(`setInterval()`)を利用して定期的にQRコード認識処理を呼び出します。
-
-```typescript
-  timerId.current = setInterval(() => {
-    // video動画から画像に変換
-    context.drawImage(video.current, 0, 0, width, height);
-    const imageData = context.getImageData(0, 0, width, height);
-    // QR認識ライブラリに引き渡す
-    const qr = jsqr(imageData.data, imageData.width, imageData.height);
-  }
-```
-
-4. `qr`がnullでなければコードが認識されています。
-
-* `qr.data`に読み取った値が入っています
-
-* `qr.location`には、QRコードの位置が入っています。認識したコードを赤枠で囲うため`drawRect()`を呼び出して枠をオーバーレイ表示しています
-
-* `props.onRecognizeCode`がnullでなければ、呼び出し元にコールバックします
-
-```typescript
+export function processData(data: ImageData): QRCode {
+  // Process the data without stalling the UI
+  const qr = jsqr(data.data, data.width, data.height);
   if (qr) {
     console.log(qr.data);
-    if (props.showQRFrame) {
-      drawRect(qr.location.topLeftCorner, qr.location.bottomRightCorner);
-    }
-    if (props.onRecognizeCode) props.onRecognizeCode(qr);               
+    return qr;
   }
-```
-
-
-## 利用方法
-
-* コンポーネントのサイズと(width, height)と、読み取り状態(pause)に初期値をセットします。
-
-```typescript
-  const [qrParam, setQRParam] = useState({
-    width: 500,
-    height: 500,
-    pause: true,
-  });
-```
-
-* `onRecognizeCode()`で認識されたQRコードを取得し、読み取りを停止します。
-
-```typescript
-  const onRecognizeCode = (e: QRCode) => {
-    setCode(e.data);
-    if (stopOnRecognize) {
-      setQRParam( e => { return {...e, pause: true}; });
-    }
-  }`
-```
-
-* `toggleVideoStream()`で停止と再開を切り替えます
-
-```typescript
-  const toggleVideoStream = () => {
-    setQRParam( e => { return {...e, pause: !e.pause}; });
-  }
-```
-
-```typescript
-import React, { useState } from 'react';
-import QRReader, { QRCode } from './QRReader';
-
-function App() {
-  const [stopOnRecognize, setStopOnRecognize] = React.useState(true);
-  const [qrParam, setQRParam] = useState({
-    width: 500,
-    height: 500,
-    pause: true,
-  });
-
-  const [code, setCode] = useState('');
-
-  const onRecognizeCode = (e: QRCode) => {
-    setCode(e.data);
-    if (stopOnRecognize) {
-      setQRParam( e => { return {...e, pause: true}; });
-    }
-  }
-
-  const toggleVideoStream = () => {
-    setQRParam( e => { return {...e, pause: !e.pause}; });
-  }
-
-  return (
-    <div className="App">
-      <QRReader {...qrParam} onRecognizeCode={onRecognizeCode} />
-      <div>
-        <label>
-          <input type="radio" name="rdo" value="0" onChange={(e) => setStopOnRecognize(e.target.value === "0")} checked={stopOnRecognize} />認識時に自動停止
-        </label>
-        <label>
-          <input type="radio" name="rdo" value="1" onChange={(e) => setStopOnRecognize(e.target.value === "0")} checked={!stopOnRecognize} />認識時も処理継続
-        </label>
-        
-        <button onClick={toggleVideoStream}>{(qrParam.pause? '再開': '停止')}</button>
-        <p>QRコード：{code}</p>
-      </div>
-
-    </div>
-  );
+  return null;
 }
+```
 
-export default App;
+* 利用側ソース
 
+Workerを生成して、Promiseを返す非同期メソッドとして呼び出すだけです。
+
+> PostMessage()を使わず、普通のメソッドとしてWeb Workerが呼び出せてしまいます。
+
+```typescript
+/* ./QRReader.tsx */
+  const worker = new Worker();
+
+  // ～～～ 途 中 略 ～～～
+
+  timerId.current = setInterval(() => {
+    context.drawImage(video.current, 0, 0, width, height);
+    const imageData = context.getImageData(0, 0, width, height);
+    worker.processData(imageData).then(qr => {
+    if (qr) {
+      console.log(qr.data);
+      if (props.showQRFrame) {
+        drawRect(qr.location.topLeftCorner, qr.location.bottomRightCorner);
+      }
+      if (props.onRecognizeCode) props.onRecognizeCode(qr);               
+    }
+    });
+  }, props.timerInterval);
 ```
