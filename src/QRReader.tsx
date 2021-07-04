@@ -49,13 +49,13 @@ const QRScanerFrames = keyframes`
     height: 0px;
   }
   to {
-    height: 500px;
+    height: 100%;
   }
 `;
 
 const QRScanerBar = styled.div`
   animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out;
-  border: 1px solid #0F0;
+  border-bottom: 3px solid #0F0;
 `;
 
 
