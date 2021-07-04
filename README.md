@@ -5,9 +5,9 @@
 
 ## はじめに
 
-以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)に、上下に移動する「緑色のバー」を追加しました(CSS animation)。
+以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)に、上下に移動する「緑色のバー」を追加しました(CSS animation)。バーに機能上の意味はなく、スキャンしている雰囲気を醸し出すだけです。
 
-ところが、バーの動きが**かくかく**してしまい、きれいなアニメーションになりません。
+ところが、バーの動きが**<span style="color: red; ">かくかく</span>**してしまい、きれいなアニメーションになりません。
 
 UIスレッドでQRコード認識(少し時間がかかる)を行うことが原因で、描画処理がブロックされているようです。
 
@@ -15,7 +15,7 @@ UIスレッドでQRコード認識(少し時間がかかる)を行うことが�
 
 ---
 
-* 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。eject不要、TypeScriptでWeb Workerの処理を書いて、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
+* 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。TypeScriptを利用でき、eject不要、Web Workerの処理は通常のメソッド定義で行い、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
 
 ---
 
