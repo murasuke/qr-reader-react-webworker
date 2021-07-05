@@ -11,7 +11,7 @@ export type QRReaderProps = {
   pause?: boolean,
   showQRFrame?: boolean,
   timerInterval?: number,
-  onRecognizeCode?: (e: QRCode) => void,
+  gecognizeCallback?: (e: QRCode) => void,
 }
 
 type Point = {
@@ -111,7 +111,7 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
             if (props.showQRFrame) {
               drawRect(qr.location.topLeftCorner, qr.location.bottomRightCorner);
             }
-            if (props.onRecognizeCode) props.onRecognizeCode(qr);               
+            if (props.gecognizeCallback) props.gecognizeCallback(qr);               
           }
           });
         }, props.timerInterval);
