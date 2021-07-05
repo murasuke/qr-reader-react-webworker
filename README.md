@@ -39,7 +39,7 @@ Web Workerの処理も、postMessage()によるメッセージングは意識す
 
 ## create-react-appで作ったアプリケーションとWeb Workerを組み合わせた場合に発生する技術的な課題について
 
-[Create React AppでWeb Workerを使うには](https://blog.makotoishida.com/2018/11/create-react-appweb-worker.html) にまとめられていますが、Web Workerを使うのはかなりしんどいようです。
+[Create React AppでWeb Workerを使うには](https://blog.makotoishida.com/2018/11/create-react-appweb-worker.html) からの引用です。Web Workerを使うのはかなりしんどいようです。
 
 ### 1. publicフォルダにWorkerのJSファイルを配置して読み込む
 
@@ -63,8 +63,8 @@ worker.postMessage(`hoge`);
 
 > わからんでもないが、トリッキー過ぎるので却下・・・
 
-こちらのページで上記1.～4.の議論が行われていますが、結論が良く割りませんでした。
-[Is it possible to use load webworkers? #1277](https://github.com/facebook/create-react-app/issues/1277)
+[Is it possible to use load webworkers? #1277](https://github.com/facebook/create-react-app/issues/1277) で上記1.～4.の議論が行われていますが、結論が良く割りませんでした。
+
 
 
 ## 解決策：`create-react-app`と`Web Worker`で検索したところ、[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)という解決策がみつかりました
@@ -105,6 +105,8 @@ import Worker from 'comlink-loader!./worker'; // inline loader
 export default Worker;
 ```
 
+* QRコードの認識処理を記載します。
+
 ```typescript
 /* ./worker/worker.ts */
 import jsqr, { QRCode } from 'jsqr';
@@ -123,12 +125,14 @@ export function processData(data: ImageData): QRCode {
 * 利用側ソース
 
 Workerを生成して、Promiseを返す非同期メソッドとして呼び出すだけです。
+(workerはレンダリング毎に生成されるのを防ぐためuseMemo()でキャッシュしています)
 
 > PostMessage()を使わず、普通のメソッドとしてWeb Workerが呼び出せてしまいます。
 
 ```typescript
 /* ./QRReader.tsx */
-  const worker = new Worker();
+const QRReader: React.FC<QRReaderProps> = (props) => {
+  const worker = useMemo(() =>  new Worker(), [])
 
   // ～～～ 途 中 略 ～～～
 
@@ -146,3 +150,4 @@ Workerを生成して、Promiseを返す非同期メソッドとして呼び出�
     });
   }, props.timerInterval);
 ```
+
