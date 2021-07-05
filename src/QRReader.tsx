@@ -9,7 +9,7 @@ export type QRReaderProps = {
   pause?: boolean,
   showQRFrame?: boolean,
   timerInterval?: number,
-  onRecognizeCode?: (e: QRCode) => void,
+  gecognizeCallback?: (e: QRCode) => void,
 }
 
 type Point = {
@@ -53,8 +53,8 @@ const QRScanerFrames = keyframes`
   }
 `;
 
-const QRScanerBar = styled.div`
-  animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out;
+const QRScanerBar = styled.div<{state: 'paused'|'running'}>`
+  animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out ${(props) => props.state};
   border-bottom: 3px solid #0F0;
 `;
 
@@ -109,7 +109,7 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
             if (props.showQRFrame) {
               drawRect(qr.location.topLeftCorner, qr.location.bottomRightCorner);
             }
-            if (props.onRecognizeCode) props.onRecognizeCode(qr);               
+            if (props.gecognizeCallback) props.gecognizeCallback(qr);               
           }
         }, props.timerInterval);
       }
@@ -123,7 +123,7 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
     <RelativeWrapperDiv {...props}>
       <VideoArea ref={video}></VideoArea>
       <OverlayDiv {...overlay}></OverlayDiv>
-      <QRScanerBar></QRScanerBar>
+      <QRScanerBar {...{state: (props.pause? 'paused': 'running')}}></QRScanerBar>
     </RelativeWrapperDiv>    
   );
 }
