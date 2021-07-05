@@ -1,25 +1,25 @@
-# create-react-app(TypeScript)で作成してアプリにWeb Workerを導入する方法
+# create-react-app(TypeScript)で作成したアプリにWeb Workerを導入する方法
 
 
+* [github pages - 動作確認ページ](https://murasuke.github.io/qr-reader-react-webworker/)
 
+* [github - QRコード認識Reactコンポーネント with Web Worker](https://github.com/murasuke/qr-reader-react-webworker/)
 
-* [QRコード認識Reactコンポーネント with Web Worker](https://github.com/murasuke/qr-reader-react-webworker/)
 
 ## はじめに
 
 以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)を格好よくするため、上下に移動する「緑色のバー」を追加しました(CSS animation)。
 
 ところが、バーの動きが**ガクガク**してしまい、きれいなアニメーションになりません。
-
 QRコード認識処理を止めるとスムーズに表示されるので、認識処理が描画処理がブロックしているようです。
 
 解決するには、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)を利用し、別スレッドで認識処理を動かせばいいのですが、一筋縄ではいきません。
 
 * create-react-appがWeb Workerをサポートしていない
 
-* TypeScriptをWeb Workerで動作させるにはEjectする必要がある
+* TypeScriptをWeb Workerで動作させるにはejectする必要がある
 
-試行錯誤の上、eject無しに動く手段が見つかりましたので顛末をまとめます。
+試行錯誤の上、ejectしなくても動く手段が見つかりましたので顛末をまとめます。
 
 ---
 
@@ -59,6 +59,7 @@ worker.postMessage(`hoge`);
 ### 3. ejectせずに react-app-rewired を使ってWebPackの設定に worker-loader または worker-plugin を追加する。
 
 > WebPackを直接使いたくないので却下・・・
+
 ### 4. WorkerのJSファイルをBlobとして読み込んでからWorkerスレッドを生成する。
 
 > わからんでもないが、トリッキー過ぎるので却下・・・
