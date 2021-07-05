@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styled, { keyframes} from 'styled-components';
 import Worker from './worker';
 import { QRCode } from 'jsqr';
@@ -55,17 +55,16 @@ const QRScanerFrames = keyframes`
   }
 `;
 
-const QRScanerBar = styled.div`
-  animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out;
+const QRScanerBar = styled.div<{state: 'paused'|'running'}>`
+  animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out ${(props) => props.state};
   border-bottom: 3px solid #0F0;
 `;
-
 
 const QRReader: React.FC<QRReaderProps> = (props) => {
   const [overlay, setOverlay] = useState({ top:0, left: 0, width: 0, height: 0 });  
   const video = useRef(null as HTMLVideoElement);
   const timerId = useRef(null);
-  const worker = new Worker();
+  const worker = useMemo(() =>  new Worker(), [])
 
   const drawRect = (topLeft: Point, bottomRight: Point) => {
     setOverlay({
@@ -126,7 +125,7 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
     <RelativeWrapperDiv {...props}>
       <VideoArea ref={video}></VideoArea>
       <OverlayDiv {...overlay}></OverlayDiv>
-      <QRScanerBar></QRScanerBar>
+      <QRScanerBar {...{state: (props.pause? 'paused': 'running')}}></QRScanerBar>
     </RelativeWrapperDiv>    
   );
 }

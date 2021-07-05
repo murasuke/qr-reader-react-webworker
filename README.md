@@ -1,21 +1,30 @@
-# QRコード認識Reactコンポーネント with Web Worker
+# create-react-app(TypeScript)で作成してアプリにWeb Workerを導入する方法
 
 
-* [github-qr-reader-react-webworker](https://github.com/murasuke/qr-reader-react-webworker/)
+
+
+* [QRコード認識Reactコンポーネント with Web Worker](https://github.com/murasuke/qr-reader-react-webworker/)
 
 ## はじめに
 
-以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)に、上下に移動する「緑色のバー」を追加しました(CSS animation)。
+以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)を格好よくするため、上下に移動する「緑色のバー」を追加しました(CSS animation)。
 
-ところが、バーの動きが**かくかく**してしまい、きれいなアニメーションになりません。
+ところが、バーの動きが**ガクガク**してしまい、きれいなアニメーションになりません。
 
-UIスレッドでQRコード認識(少し時間がかかる)を行うことが原因で、描画処理がブロックされているようです。
+QRコード認識処理を止めるとスムーズに表示されるので、認識処理が描画処理がブロックしているようです。
 
-解決のため、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)の導入を検討し、試行錯誤の上で動くようになったので、情報としてまとめました。
+解決するには、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)を利用し、別スレッドで認識処理を動かせばいいのですが、一筋縄ではいきません。
+
+* create-react-appがWeb Workerをサポートしていない
+
+* TypeScriptをWeb Workerで動作させるにはEjectする必要がある
+
+試行錯誤の上、eject無しに動く手段が見つかりましたので顛末をまとめます。
 
 ---
 
-* 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。eject不要、TypeScriptでWeb Workerの処理を書いて、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
+* 最初に結論ですが、[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。eject不要、TypeScriptでWeb Workerの処理を書いて、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
+Web Workerの処理も、postMessage()によるメッセージングは意識する必要は全くなく、通常のメソッド呼び出しとして記載します。
 
 ---
 
