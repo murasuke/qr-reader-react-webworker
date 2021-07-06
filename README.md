@@ -146,7 +146,7 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
       if (props.showQRFrame) {
         drawRect(qr.location.topLeftCorner, qr.location.bottomRightCorner);
       }
-      if (props.onRecognizeCode) props.onRecognizeCode(qr);               
+      if (props.gecognizeCallback) props.gecognizeCallback(qr);               
     }
     });
   }, props.timerInterval);

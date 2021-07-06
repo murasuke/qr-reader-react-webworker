@@ -48,15 +48,15 @@ const OverlayDiv = styled.div<OverlayPosition>`
 
 const QRScanerFrames = keyframes`
   from {
-    height: 0px;
+    height: 2%;
   }
   to {
-    height: 100%;
+    height: 98%;
   }
 `;
 
 const QRScanerBar = styled.div<{state: 'paused'|'running'}>`
-  animation: ${QRScanerFrames} infinite  2s alternate both ease-in-out ${(props) => props.state};
+  animation: ${QRScanerFrames} infinite  1300ms alternate both ease-in-out ${(props) => props.state};
   border-bottom: 3px solid #0F0;
 `;
 
@@ -68,10 +68,10 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
 
   const drawRect = (topLeft: Point, bottomRight: Point) => {
     setOverlay({
-      top: topLeft.y,
-      left: topLeft.x,
-      width: bottomRight.x - topLeft.x,
-      height: bottomRight.y - topLeft.y,
+      top: topLeft.y < bottomRight.y ? topLeft.y : bottomRight.y,
+      left: topLeft.x < bottomRight.x ? topLeft.x :bottomRight.x,
+      width: Math.abs(bottomRight.x - topLeft.x),
+      height: Math.abs(bottomRight.y - topLeft.y),
     });
   };
 
