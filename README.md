@@ -13,7 +13,7 @@
 ところが、バーの動きが**ガクガク**してしまい、きれいなアニメーションになりません。
 QRコード認識処理を止めるとスムーズに表示されるので、認識処理が描画処理がブロックしているようです。
 
-解決するには、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)を利用し、別スレッドで認識処理を動かせばいいのですが、一筋縄ではいきません。
+解決するには、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)を利用し、別スレッドで認識処理を動かせばいいのですが、一筋縄ではいかないことがわかりました。
 
 * create-react-appがWeb Workerをサポートしていない
 
