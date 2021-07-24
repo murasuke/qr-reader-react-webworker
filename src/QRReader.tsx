@@ -53,7 +53,7 @@ const OverlayDiv = styled.div<OverlayPosition>`
 // スキャン可能エリア表示
 //  ・borderを半透明(灰色)にして、中央部だけスキャンができることを目立たせる
 const QRScanArea = styled.div<QRReaderProps>`
-  position absolute;
+  position: absolute;
   box-sizing: border-box;
   height:  ${(props) => props.height}px;
   width :  ${(props) => props.width}px;
@@ -77,7 +77,7 @@ const QRScanerFrames = (ratio: number) => keyframes`
 
 // スキャン可能領域を上下する緑色のバー(スキャン中であることを明示する目的)
 const QRScanerBar = styled.div<{state: 'paused'|'running'} & QRReaderProps>`
-  position absolute;
+  position: absolute;
   animation: ${(props) => QRScanerFrames(props.scanAreaRatio)} infinite  1300ms alternate both ease-in-out ${(props) => props.state};
   border-bottom: 3px solid #0F0;
   left: ${(props) => (100 - props.scanAreaRatio) / 2}%;
