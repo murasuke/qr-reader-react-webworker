@@ -10,10 +10,16 @@
 
 以前作成した[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)を格好よくするため、上下に移動する「緑色のバー」を追加しました(CSS animation)。
 
-ところが、バーの動きが**ガクガク**してしまい、きれいなアニメーションになりません。
-QRコード認識処理を止めるとスムーズに表示されるので、認識処理が描画処理がブロックしているようです。
+※ ↓ 画像なのでわかりづらいですが「緑色のバー」が上下します。
 
-解決するには、[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)を利用し、別スレッドで認識処理を動かせばいいのですが、一筋縄ではいかないことがわかりました。
+![qr-reader.png](./img/scanbar.png)
+
+
+ところが、バーの動きが**ガクガク**になり、スムーズにアニメーションしてくれません。
+QRコードの認識処理が描画処理がブロックしているようです。(タイマーで定期的に実行しているため）
+
+こういう場合は[Web Worker](https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API/Using_web_workers)をを利用すれば、バックグラウンドで認識処理行うことができます。
+ところが簡単には導入できないようです。
 
 * create-react-appがWeb Workerをサポートしていない
 
@@ -23,57 +29,18 @@ QRコード認識処理を止めるとスムーズに表示されるので、認
 
 ---
 
-* 最初に結論ですが、[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します。eject不要、TypeScriptでWeb Workerの処理を書いて、呼び出しは通常の非同期メソッドとして利用できてしまうという優れモノです。
-Web Workerの処理も、postMessage()によるメッセージングは意識する必要は全くなく、通常のメソッド呼び出しとして記載します。
+## 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します
 
----
+Web Workerで実行する処理をTypeScriptの`通常のメソッドとして`書くことができます。
+呼び出しも通常の非同期メソッド(postMessageは不要)として呼びだすことができる優れものです。
 
-※ ↓ 画像なのでわかりづらいですが「緑色のバー」が上下します。
-
-![qr-reader.png](./img/scanbar.png)
-
-
-
-* QRコード認識については[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)をご確認ください。
-
-
-## create-react-appで作ったアプリケーションとWeb Workerを組み合わせた場合に発生する技術的な課題について
-
-[Create React AppでWeb Workerを使うには](https://blog.makotoishida.com/2018/11/create-react-appweb-worker.html) からの引用です。Web Workerを使うのはかなりしんどいようです。
-
-### 1. publicフォルダにWorkerのJSファイルを配置して読み込む
-
-Web Workerは`.js`ファイルを読み込むため、publicフォルダに`worker.js`ファイルを別途作成して配置しておくか、`worker.ts`を別途tscでビルドしてpublicフォルダに配置するようにする必要がある。
-
-```javascript
-const worker = new Worker('worker.js');
-worker.postMessage(`hoge`);
-```
-
-> 処理内容をTypeScriptで書きたい、別にビルドするのが面倒なので却下
-
-### 2. ejectしてからWebPackの設定に worker-loader または worker-plugin を追加する
-
-> ejectしたくない、WebPackを直接使いたくない却下
-
-### 3. ejectせずに react-app-rewired を使ってWebPackの設定に worker-loader または worker-plugin を追加する。
-
-> WebPackを直接使いたくないので却下・・・
-
-### 4. WorkerのJSファイルをBlobとして読み込んでからWorkerスレッドを生成する。
-
-> わからんでもないが、トリッキー過ぎるので却下・・・
-
-[Is it possible to use load webworkers? #1277](https://github.com/facebook/create-react-app/issues/1277) で上記1.～4.の議論が行われていますが、結論が良く割りませんでした。
-
-
-
-## 解決策：`create-react-app`と`Web Worker`で検索したところ、[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)という解決策がみつかりました
 
 **Web Workerを意識せず、メソッドの呼び出しとして処理できてしまいます！**
 
+* QRコード認識については[QRコード認識Reactコンポーネント](https://github.com/murasuke/qr-reader-react)をご確認ください。
+---
 
-### 使い方
+### [comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)の組み込み手順
 
 * ./src/worker フォルダに下記3ファイルを作成します
 
@@ -151,4 +118,40 @@ const QRReader: React.FC<QRReaderProps> = (props) => {
     });
   }, props.timerInterval);
 ```
+
+
+## create-react-appで作ったアプリケーションとWeb Workerを組み合わせた場合に発生する技術的な課題について
+
+[Create React AppでWeb Workerを使うには](https://blog.makotoishida.com/2018/11/create-react-appweb-worker.html) からの引用です。Web Workerを使うのはかなりしんどいようです。
+
+### 1. publicフォルダにWorkerのJSファイルを配置して読み込む
+
+Web Workerは`.js`ファイルを読み込むため、publicフォルダに`worker.js`ファイルを別途作成して配置しておくか、`worker.ts`を別途tscでビルドしてpublicフォルダに配置するようにする必要がある。
+
+```javascript
+const worker = new Worker('worker.js');
+worker.postMessage(`hoge`);
+```
+
+> 処理内容をTypeScriptで書きたい、別にビルドするのが面倒なので却下
+
+### 2. ejectしてからWebPackの設定に worker-loader または worker-plugin を追加する
+
+> ejectしたくない、WebPackを直接使いたくない却下
+
+### 3. ejectせずに react-app-rewired を使ってWebPackの設定に worker-loader または worker-plugin を追加する。
+
+> WebPackを直接使いたくないので却下・・・
+
+### 4. WorkerのJSファイルをBlobとして読み込んでからWorkerスレッドを生成する。
+
+> わからんでもないが、トリッキー過ぎるので却下・・・
+
+[Is it possible to use load webworkers? #1277](https://github.com/facebook/create-react-app/issues/1277) で上記1.～4.の議論が行われていますが、結論が良く割りませんでした。
+
+
+
+
+
+
 
