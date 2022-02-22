@@ -29,7 +29,7 @@ QRコードの認識処理が描画処理がブロックしているようです
 
 ---
 
-## 結論：[comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を利用します
+## [comlink-loader](https://github.com/GoogleChromeLabs/comlink-loader)を使うと、容易に導入できます
 
 Web Workerで実行する処理をTypeScriptの`通常のメソッドとして`書くことができます。
 呼び出しも通常の非同期メソッド(postMessageは不要)として呼びだすことができる優れものです。
