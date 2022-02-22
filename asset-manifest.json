@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.js": "/qr-reader-react-webworker/static/js/main.43592e1a.chunk.js",
-    "main.js.map": "/qr-reader-react-webworker/static/js/main.43592e1a.chunk.js.map",
+    "main.js": "/qr-reader-react-webworker/static/js/main.a06729cd.chunk.js",
+    "main.js.map": "/qr-reader-react-webworker/static/js/main.a06729cd.chunk.js.map",
     "runtime-main.js": "/qr-reader-react-webworker/static/js/runtime-main.31d056c7.js",
     "runtime-main.js.map": "/qr-reader-react-webworker/static/js/runtime-main.31d056c7.js.map",
-    "static/js/2.b9f17565.chunk.js": "/qr-reader-react-webworker/static/js/2.b9f17565.chunk.js",
-    "static/js/2.b9f17565.chunk.js.map": "/qr-reader-react-webworker/static/js/2.b9f17565.chunk.js.map",
-    "07a4d927844014e176ef.worker.js": "/qr-reader-react-webworker/07a4d927844014e176ef.worker.js",
-    "07a4d927844014e176ef.worker.js.map": "/qr-reader-react-webworker/07a4d927844014e176ef.worker.js.map",
+    "static/js/2.026c8a61.chunk.js": "/qr-reader-react-webworker/static/js/2.026c8a61.chunk.js",
+    "static/js/2.026c8a61.chunk.js.map": "/qr-reader-react-webworker/static/js/2.026c8a61.chunk.js.map",
+    "f61a5d3cf1c50133bc32.worker.js": "/qr-reader-react-webworker/f61a5d3cf1c50133bc32.worker.js",
+    "f61a5d3cf1c50133bc32.worker.js.map": "/qr-reader-react-webworker/f61a5d3cf1c50133bc32.worker.js.map",
     "index.html": "/qr-reader-react-webworker/index.html",
-    "static/js/2.b9f17565.chunk.js.LICENSE.txt": "/qr-reader-react-webworker/static/js/2.b9f17565.chunk.js.LICENSE.txt"
+    "static/js/2.026c8a61.chunk.js.LICENSE.txt": "/qr-reader-react-webworker/static/js/2.026c8a61.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.31d056c7.js",
-    "static/js/2.b9f17565.chunk.js",
-    "static/js/main.43592e1a.chunk.js"
+    "static/js/2.026c8a61.chunk.js",
+    "static/js/main.a06729cd.chunk.js"
   ]
 }
